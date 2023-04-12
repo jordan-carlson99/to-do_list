@@ -34,36 +34,37 @@ app.get("/styles.css", (req, res) => {
 
 app.get("/api/list", (req, res) => {
   pool.query(`SELECT * FROM list;`).then((response) => {
-    res.send(response);
+    res.send(response.rows);
   });
 });
 
-app.post("/api/new", (req, res) => {
+app.get("/api/new", (req, res) => {
   pool
     .query(
       `INSERT INTO list (task,complete)
   VALUES ($1,$2)`,
-      [req.body.task, req.body.complete]
+      [req.query.task, req.query.complete]
     )
     .then(() => {
-      res.send("complete");
+      res.redirect(`http://127.0.0.1:3000/`);
     });
 });
 
 app.patch("/api/update/:id", (req, res) => {
+  console.log(req.body);
   pool
     .query(
       `UPDATE list SET task=COALESCE($1,task), complete=COALESCE($2,complete) WHERE id=$3`,
       [req.body.task || null, req.body.complete || null, req.params.id]
     )
     .then(() => {
-      res.send("complete");
+      res.redirect(303, `back`);
     });
 });
 
-app.delete("/api/remove/:id", (req, res) => {
+app.delete("/api/remove/:id", (req, res, next) => {
   pool.query(`DELETE FROM list WHERE id=$1`, [req.params.id]).then(() => {
-    res.send("complete");
+    next();
   });
 });
 
